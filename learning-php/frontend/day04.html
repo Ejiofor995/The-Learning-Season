@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Age Check</title>
+  
+  <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" defer></script>
+  <link rel="stylesheet" href="./libraries/daisyui.css">
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+  
+  <style>
+    [x-cloak]{display:none}
+  </style>
+  
+</head>
+
+<body>
+  <div x-data="{age:'', name:''}" class="container mx-auto w-[80%] md:w-1/2 p-4 shadow-md rounded space-y-4">
+    <h2 class="text-xl font-semibold text-center">Age Check</h2>
+    <input x-model="name" type="text" class="input input-primary w-full" placeholder="What is your name?" name="name" />
+    <input x-model="age" type="number" class="input input-primary w-full" placeholder="How old are you?" name="age">
+    <p x-cloak x-transition x-show="(name && age) && age<=125" x-text="age>=18 ? `Congratulations ${name} you are Eligible hence you are ${age} years old 🎉` : `Sorry ${name}, you are not Eligible, come back in ${18-age} year(s) time`  " :class=" ['easy-in-out transition duration-300', age>17 ? 'text-success' : 'text-error', ] "></p>
+    
+    <p x-cloak x-transition x-show="age && age>125" class="text-info ease-in-out transition duration-300" x-text="`Congratulations, you passed the age test but since you are ${age} years old, you must be one of the oldest people in the world right now, i pray i live longer than you 🙂`"></p>
+  </div>
+</body>
+
+</html>

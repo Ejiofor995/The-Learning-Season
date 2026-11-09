@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Basic Calculator</title>
+  
+    <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" defer></script>
+  <link rel="stylesheet" href="./libraries/daisyui.css">
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+</head>
+
+<body>
+  
+  <p class="fixed inset-0 top-0 sticky z-50 p-4 bg-base-200 ">This utilizes a php backend server called zuck-calc API</p>
+
+  
+<div class="flex flex-col justify-center items-center  min-h-screen gap-4">
+  
+  <form class="form border-2 border-primary rounded-lg p-4 flex flex-col w-[80%] md:max-w-4xl mx-auto gap-4" action="http://127.0.0.1:8000/learning-php/zuck-calc.php" method="post">
+    <h2 class="text-center text-bold text-lg py-4">Dark Zuckerberg's Calculator</h2>
+    <input required class="input input-primary" type="number" name="a" placeholder="Enter the 1st number 🙂"/>
+    <select required class="select select-primary" name="o">
+      <option value="null" selected disabled>select an opertaor</option>
+      <option value="+">(+) Addition</option>
+      <option value="-">(-) Subtraction</option>
+      <option value="*">(×) Multiplication</option>
+      <option value="/">(÷) Division</option>
+      <option value="^">(^) Index</option>
+      <option value="%">(%) Remainder</option>
+    </select>
+    <input required class="input input-primary" type="number" name="b" placeholder="Enter the 2nd number 🙂" />
+    
+    <button class="btn btn-primary" type="submit">Calculate</button>
+    <p id="response" class="w-full text-center text-primary" >Your Results will appear here👇</p>
+  </form>
+  
+</div>
+  
+ <script>
+ 
+ const form = document.querySelector('form');
+ form.addEventListener('submit',(event)=>{
+   
+      event.preventDefault();
+     
+     fetch('http://127.0.0.1/learning-php/zuck-calc.php', {method:'POST', body:new FormData(form)}).then(response=>response.json()).then(data=>{
+       console.log(data.result);
+       document.querySelector('#response').textContent=`That would be ${data.result}`;
+     })
+ });
+ </script>
+</body>
+
+</html>

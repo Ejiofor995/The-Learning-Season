@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lot Size Calculator</title>
+  
+  <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" defer></script>
+  <link rel="stylesheet" href="./libraries/daisyui.css">
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+  <link rel="stylesheet" href="./libraries/pico.min.css">
+</head>
+
+<body class="p-4" x-data="{risk_method:null}">
+  
+
+  <div class="w-[80%] h-fit fixed inset-0 m-auto bg-gray-500 rounded-lg flex flex-col justify-center items-center text-2xl hidden gap-4 p-4" id="response">
+    <p class="text-white" id="response-text"></p>
+    <button @click="document.querySelector('#response').classList.toggle('hidden')" class="btn btn-primary p-2 w-full">Thank You</button></button>
+  </div>
+  
+  <section>
+    
+    <h2 class="text-center text-2xl font-bold mb-4">Lot size calculator</h2>
+    
+  <article>
+    <form name="lot_size_form">
+      
+      <label>Select a currency pair
+        <select required name="pair" class="p-4">
+          <option value="btc/usd">BTC/USD</option>
+        </select>
+      </label>
+      
+      <label>Is your risk percentage or amount based?
+        <select x-model="risk_method" required name="risk_method" class="p-4">
+          <option value="percentage">Percentage</option>
+          <option value="amount">Amount</option>
+        </select>
+      </label>
+      
+      <label :class="{'hidden':risk_method=='amount'}">What is your Equity
+        <input required name="equity" :value="{0:risk_method=='amount'} " type="number" />
+      </label>
+      
+      <label>Risk
+        <input required name="risk" type="number" />
+      </label>
+      
+      <label>Entry Price
+        <input required name="entry_price" type="number" />
+      </label>
+      
+      <label>Exit Price
+        <input required name="exit_price" type="number" />
+      </label>
+      
+      <button type="submit">Calculate</button>
+      
+    </form>
+  </article>
+  
+  </section>
+  
+  
+  <script>
+    const form=document.querySelector("form[name='lot_size_form']");
+    
+    form.addEventListener('submit', (event)=>{
+      
+      event.preventDefault();
+      
+      fetch('http://127.0.0.1/learning-php/lot-size-calculator.php', {
+        method:'POST', 
+        body:new FormData(form)
+      })
+      .then(res=>res.json())
+      .then(data=>{
+        if (data.error){
+          console.error(data.response)
+        }
+        document.querySelector("#response-text").textContent=`To maintain a risk amount of $${data.risk_amount} use a contract size of ${data.response} Lot`;
+        document.querySelector("#response").classList.toggle('hidden');
+      })
+      .catch(err=>console.error(err));
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mercado</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style type="text/tailwindcss">
+  @layer components {
+    .btn { @apply bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-40; }
+    .btn2 { @apply border border-slate-400 px-3 py-1 rounded-lg text-sm; }
+    .inp { @apply border border-slate-300 rounded-lg px-3 py-2 w-full bg-white; }
+  }
+  [v-cloak]{display:none}
+</style>
+</head>
+<body class="bg-stone-100 text-slate-900">
+<div id="app" v-cloak>
+<header class="bg-slate-900 text-white sticky top-0 z-10">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <a href="#/" class="font-extrabold text-xl">Mercado</a>
+    <nav class="flex gap-4 text-sm">
+      <a :href="me ? '#/dashboard' : '#/register'">{{ me ? 'Dashboard' : 'Sell' }}</a>
+      <a href="#/cart">Cart ({{ db.cart.length }})</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto p-4">
+
+<!-- HOME -->
+<section v-if="view === 'home'">
+  <div v-if="featured.length" class="mb-6">
+    <h2 class="font-bold text-lg mb-2">Featured</h2>
+    <div class="flex gap-3 overflow-x-auto pb-2 snap-x">
+      <a v-for="p in featured" :key="p.id" :href="'#/product/' + p.id" class="snap-start shrink-0 w-52 bg-white rounded-xl overflow-hidden border-2 border-amber-400">
+        <img :src="p.images[0]" class="w-full h-32 object-cover" alt="">
+        <div class="p-2"><p class="font-semibold text-sm truncate">{{ p.title }}</p><p class="text-sm">{{ money(finalPrice(p)) }}</p></div>
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+    <input v-model="q" class="inp col-span-2" placeholder="Search products">
+    <select v-model="cat" class="inp"><option v-for="c in cats">{{ c }}</option></select>
+    <input v-model.number="max" type="number" class="inp" placeholder="Max price ₦">
+    <select v-model="sort" class="inp"><option value="random">Random</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>
+  </div>
+  <button class="btn2 mb-4" @click="reshuffle">Shuffle</button>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 grid-flow-dense">
+    <a v-for="p in shown" :key="p.id" :href="'#/product/' + p.id"
+       class="bg-white rounded-xl overflow-hidden border border-slate-200"
+       :class="layout[p.id] === 'h' ? 'col-span-2 flex' : ''">
+      <img :src="p.images[0]" alt="" :class="layout[p.id] === 'h' ? 'w-1/2 object-cover' : 'w-full h-36 object-cover'">
+      <div class="p-3">
+        <p class="font-semibold">{{ p.title }}</p>
+        <p class="text-xs text-slate-500 capitalize">{{ p.cat }}</p>
+        <p class="mt-1"><span class="font-bold">{{ money(finalPrice(p)) }}</span>
+          <s v-if="finalPrice(p) < p.price" class="text-xs text-slate-500 ml-1">{{ money(p.price) }}</s></p>
+      </div>
+    </a>
+  </div>
+  <p v-if="!shown.length" class="mt-6">No products match. Clear a filter and try again.</p>
+</section>
+
+<!-- PRODUCT -->
+<section v-else-if="view === 'product' && product" class="grid md:grid-cols-2 gap-6">
+  <div>
+    <img :src="product.images[imgIdx] || product.images[0]" class="w-full rounded-xl" alt="">
+    <div class="flex gap-2 mt-2">
+      <img v-for="(im, i) in product.images" :key="i" :src="im" @click="imgIdx = i" alt=""
+           class="w-20 h-16 object-cover rounded-lg cursor-pointer" :class="i === imgIdx ? 'ring-2 ring-slate-900' : ''">
+    </div>
+  </div>
+  <div>
+    <a href="#/" class="text-sm underline">Back to products</a>
+    <h1 class="text-3xl font-bold mt-2">{{ product.title }}</h1>
+    <p class="capitalize text-slate-500">{{ product.cat }}, sold by {{ sellerName(product.sellerId) }}</p>
+    <p class="text-2xl font-bold mt-3">{{ money(finalPrice(product)) }}
+      <s v-if="finalPrice(product) < product.price" class="text-base text-slate-500 ml-2">{{ money(product.price) }}</s></p>
+    <p class="mt-4">{{ product.desc }}</p>
+    <button class="btn mt-6" :disabled="db.cart.includes(product.id)" @click="addToCart(product.id)">
+      {{ db.cart.includes(product.id) ? 'In your cart' : 'Add to cart' }}</button>
+  </div>
+</section>
+
+<!-- CART -->
+<section v-else-if="view === 'cart'" class="max-w-xl">
+  <h1 class="text-2xl font-bold mb-4">Your cart</h1>
+  <p v-if="!cartItems.length">Your cart is empty. <a href="#/" class="underline">Browse products</a></p>
+  <div v-for="p in cartItems" :key="p.id" class="bg-white rounded-xl p-3 mb-2 flex items-center gap-3">
+    <img :src="p.images[0]" class="w-16 h-12 object-cover rounded" alt="">
+    <p class="flex-1">{{ p.title }}</p><p>{{ money(finalPrice(p)) }}</p>
+    <button class="btn2" @click="db.cart = db.cart.filter(i => i !== p.id)">Remove</button>
+  </div>
+  <div v-if="cartItems.length" class="mt-4">
+    <input v-model="buyerEmail" type="email" class="inp mb-3" placeholder="Your email for the receipt">
+    <p class="text-xl font-bold mb-3">Total: {{ money(total) }}</p>
+    <button class="btn" @click="checkout">Pay with Paystack (test)</button>
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section v-else-if="view === 'register'" class="max-w-md">
+  <h1 class="text-2xl font-bold mb-4">Become a seller</h1>
+  <div class="grid gap-3">
+    <input v-model="reg.fullName" class="inp" placeholder="Full name">
+    <input v-model="reg.location" class="inp" placeholder="Location (city)">
+    <input v-model="reg.email" type="email" class="inp" placeholder="Email">
+    <input v-model="reg.phone" class="inp" placeholder="Phone number">
+    <select v-model="reg.gender" class="inp"><option value="">Gender</option><option>Female</option><option>Male</option><option>Other</option></select>
+    <select v-model="reg.country" class="inp"><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>South Africa</option><option>Other</option></select>
+    <input v-model="reg.bank" class="inp" placeholder="Bank name">
+    <input v-model="reg.account" class="inp" placeholder="Account number">
+    <button class="btn" @click="register">Create seller account</button>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section v-else-if="view === 'dashboard'">
+  <p v-if="!me">Please <a href="#/register" class="underline">register as a seller</a> first.</p>
+  <div v-else>
+    <h1 class="text-2xl font-bold">Hi {{ me.fullName }}</h1>
+    <div class="grid md:grid-cols-3 gap-4 mt-4">
+      <div class="bg-slate-900 text-white rounded-xl p-5">
+        <p class="text-sm text-slate-300">Wallet balance (sales)</p>
+        <p class="text-3xl font-bold">{{ money(balance) }}</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 md:col-span-2 max-h-40 overflow-y-auto">
+        <p class="font-semibold mb-1">Transactions</p>
+        <p v-if="!myTx.length" class="text-sm text-slate-500">No sales yet.</p>
+        <p v-for="t in myTx" :key="t.id" class="text-sm">{{ t.date }}: {{ t.note }} <b>{{ t.type === 'sale' ? '+' : '-' }}{{ money(Math.abs(t.amount)) }}</b></p>
+      </div>
+    </div>
+
+    <h2 class="font-bold text-lg mt-8 mb-2">{{ f.id ? 'Edit product' : 'Add product' }}</h2>
+    <div class="grid md:grid-cols-2 gap-3 bg-white p-4 rounded-xl">
+      <input v-model="f.title" class="inp" placeholder="Title">
+      <select v-model="f.cat" class="inp"><option value="audio">Audio</option><option value="video">Video</option><option value="document">Document</option><option value="other">Other digital</option></select>
+      <textarea v-model="f.desc" class="inp md:col-span-2" rows="3" placeholder="Description"></textarea>
+      <input v-model.number="f.price" type="number" class="inp" placeholder="Price ₦">
+      <div class="flex gap-2">
+        <select v-model="f.discountType" class="inp"><option value="percent">Discount %</option><option value="amount">Discount ₦</option></select>
+        <input v-model.number="f.discount" type="number" min="0" class="inp" placeholder="0">
+      </div>
+      <div class="md:col-span-2">
+        <input type="file" accept="image/*" multiple @change="onFiles" class="inp">
+        <div class="flex gap-2 mt-2"><img v-for="(im, i) in f.images" :key="i" :src="im" @click="f.images.splice(i, 1)" class="w-16 h-12 object-cover rounded cursor-pointer" title="Click to remove" alt=""></div>
+      </div>
+      <div class="flex gap-2"><button class="btn" @click="saveProduct">{{ f.id ? 'Save changes' : 'Add product' }}</button>
+        <button v-if="f.id" class="btn2" @click="Object.assign(f, blank())">Cancel</button></div>
+    </div>
+
+    <h2 class="font-bold text-lg mt-8 mb-2">Your products</h2>
+    <p v-if="!myProducts.length">You have not added any products yet.</p>
+    <div v-for="p in myProducts" :key="p.id" class="bg-white rounded-xl p-3 mb-2 flex flex-wrap items-center gap-3">
+      <img :src="p.images[0]" class="w-14 h-10 object-cover rounded" alt="">
+      <p class="flex-1 min-w-[8rem]">{{ p.title }} <span class="text-xs text-slate-500">({{ p.sales }} sold)</span></p>
+      <span>{{ money(finalPrice(p)) }}</span>
+      <button class="btn2" @click="edit(p)">Edit</button>
+      <button class="btn2" @click="remove(p)">Delete</button>
+      <button v-if="!p.featured" class="btn2" @click="feature(p)">Feature for ₦500</button>
+      <span v-else class="text-xs font-semibold text-amber-600">Featured</span>
+    </div>
+  </div>
+</section>
+
+<p v-else>Page not found. <a href="#/" class="underline">Go home</a></p>
+</main>
+</div>
+
+<script>
+  // Paste your Paystack TEST public key (Dashboard > Settings > API Keys). Never put the secret key here.
+  const PAYSTACK_KEY = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx';
+
+  const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+  const money = n => '₦' + Number(n || 0).toLocaleString('en-NG');
+  const finalPrice = p => Math.max(0, p.discountType === 'percent' ? Math.round(p.price * (1 - p.discount / 100)) : p.price - p.discount);
+
+  // ---- static seed data (shaped like a products API response) ----
+  const colors = ['#0F766E', '#7C3AED', '#B45309', '#BE123C', '#1D4ED8', '#15803D'];
+  const art = (t, c, i) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='450'><rect width='600' height='450' fill='${c}'/><circle cx='${120 + i * 160}' cy='${150 + i * 40}' r='${90 + i * 20}' fill='rgba(255,255,255,.18)'/><text x='30' y='410' font-size='32' font-family='sans-serif' fill='white'>${t}</text></svg>`);
+  const rows = [['Afrobeat Sample Pack','audio',4500],['Lo-fi Study Beats','audio',2500],['Podcast Intro Kit','audio',3000],
+    ['Video Editing LUTs','video',5000],['Motion Intro Templates','video',7500],['Vlog B-roll Bundle','video',6000],
+    ['CV Template Pack','document',2000],['Business Plan Template','document',3500],['Physics Study Notes','document',1500],
+    ['Notion Budget Planner','other',2800],['Instagram Post Templates','other',3200],['Logo Mockup Pack','other',4000]];
+  const seedProducts = rows.map(([title, cat, price], i) => ({
+    id: i + 1, sellerId: 1, title, cat, price,
+    discountType: i % 3 === 0 ? 'percent' : 'amount', discount: i % 3 === 0 ? 10 : (i % 2 ? 0 : 300),
+    desc: 'A digital download made by a young creator. Instant access after payment.',
+    images: [0, 1, 2].map(k => art(title, colors[(i + k) % 6], k)), featured: i < 3, sales: 0 }));
+  const seedSeller = { id: 1, fullName: 'Demo Seller', location: 'Abuja', email: 'demo@mercado.test', phone: '', gender: '', country: 'Nigeria', bank: '', account: '' };
+
+  const blank = () => ({ id: null, title: '', desc: '', cat: 'audio', price: '', discountType: 'percent', discount: 0, images: [] });
+
+  createApp({
+    setup() {
+      // ---- state, saved in this browser's localStorage ----
+      const saved = JSON.parse(localStorage.getItem('mercado-v1') || 'null');
+      const db = reactive(saved || { sellers: [seedSeller], products: seedProducts, cart: [], tx: [], me: null });
+      watch(db, () => { try { localStorage.setItem('mercado-v1', JSON.stringify(db)); } catch (e) { alert('Browser storage is full. Use smaller images.'); } }, { deep: true });
+
+      // ---- hash router ----
+      const hash = ref(location.hash || '#/');
+      addEventListener('hashchange', () => { hash.value = location.hash; imgIdx.value = 0; scrollTo(0, 0); });
+      const parts = computed(() => hash.value.slice(2).split('/'));
+      const view = computed(() => parts.value[0] || 'home');
+      const product = computed(() => db.products.find(p => p.id === +parts.value[1]));
+      const imgIdx = ref(0);
+
+      // ---- home: random order, mixed layouts, filters ----
+      const order = ref([]), layout = reactive({});
+      function reshuffle() {
+        const ids = db.products.map(p => p.id);
+        for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+        order.value = ids; ids.forEach(id => layout[id] = Math.random() < 0.35 ? 'h' : 'v');
+      }
+      onMounted(reshuffle);
+      const q = ref(''), cat = ref('All'), max = ref(''), sort = ref('random');
+      const cats = ['All', 'audio', 'video', 'document', 'other'];
+      const rank = id => { const i = order.value.indexOf(id); return i < 0 ? 999 : i; };
+      const featured = computed(() => db.products.filter(p => p.featured));
+      const shown = computed(() => {
+        const list = db.products.filter(p => (cat.value === 'All' || p.cat === cat.value)
+          && p.title.toLowerCase().includes(q.value.toLowerCase()) && (!max.value || finalPrice(p) <= max.value));
+        if (sort.value === 'low') return list.sort((a, b) => finalPrice(a) - finalPrice(b));
+        if (sort.value === 'high') return list.sort((a, b) => finalPrice(b) - finalPrice(a));
+        return list.sort((a, b) => rank(a.id) - rank(b.id));
+      });
+      const sellerName = id => (db.sellers.find(s => s.id === id) || {}).fullName || 'Unknown';
+
+      // ---- Paystack (test mode) ----
+      function pay({ email, amount, onSuccess }) {
+        if (PAYSTACK_KEY.includes('xxxx')) return alert('Add your Paystack test public key at the top of the script.');
+        if (!email) return alert('Enter an email address first.');
+        PaystackPop.setup({
+          key: PAYSTACK_KEY, email, amount: amount * 100, currency: 'NGN', ref: 'MRC_' + Date.now(),
+          callback: r => onSuccess(r), onClose: () => {}
+        }).openIframe();
+      }
+
+      // ---- cart ----
+      const buyerEmail = ref('');
+      const cartItems = computed(() => db.cart.map(id => db.products.find(p => p.id === id)).filter(Boolean));
+      const total = computed(() => cartItems.value.reduce((s, p) => s + finalPrice(p), 0));
+      const addToCart = id => { if (!db.cart.includes(id)) db.cart.push(id); };
+      function checkout() {
+        pay({ email: buyerEmail.value, amount: total.value, onSuccess: r => {
+          cartItems.value.forEach(p => { db.tx.push({ id: Date.now() + p.id, sellerId: p.sellerId, type: 'sale', amount: finalPrice(p), note: p.title, ref: r.reference, date: new Date().toLocaleString() }); p.sales++; });
+          db.cart = []; location.hash = '#/'; alert('Payment received. Reference: ' + r.reference);
+        } });
+      }
+
+      // ---- seller registration ----
+      const reg = reactive({ fullName: '', location: '', email: '', phone: '', gender: '', country: 'Nigeria', bank: '', account: '' });
+      function register() {
+        if (Object.values(reg).some(v => !String(v).trim())) return alert('Please fill in every field.');
+        const s = { id: Date.now(), ...reg }; db.sellers.push(s); db.me = s.id; location.hash = '#/dashboard';
+      }
+
+      // ---- dashboard: wallet + product CRUD + featuring ----
+      const me = computed(() => db.sellers.find(s => s.id === db.me));
+      const myProducts = computed(() => db.products.filter(p => p.sellerId === db.me));
+      const myTx = computed(() => db.tx.filter(t => t.sellerId === db.me).slice().reverse());
+      const balance = computed(() => myTx.value.filter(t => t.type === 'sale').reduce((s, t) => s + t.amount, 0));
+      const f = reactive(blank());
+      function onFiles(e) {
+        [...e.target.files].slice(0, 4 - f.images.length).forEach(file => {
+          if (file.size > 400000) return alert(file.name + ' is over 400KB.');
+          const r = new FileReader(); r.onload = () => f.images.push(r.result); r.readAsDataURL(file);
+        });
+        e.target.value = '';
+      }
+      function saveProduct() {
+        if (!f.title.trim() || !f.desc.trim() || !(f.price > 0) || !f.images.length) return alert('Add a title, description, price above 0, and at least one image.');
+        const data = { title: f.title, desc: f.desc, cat: f.cat, price: f.price, discountType: f.discountType, discount: f.discount || 0, images: [...f.images] };
+        if (f.id) Object.assign(db.products.find(p => p.id === f.id), data);
+        else db.products.push({ ...data, id: Date.now(), sellerId: db.me, featured: false, sales: 0 });
+        Object.assign(f, blank());
+      }
+      const edit = p => { Object.assign(f, JSON.parse(JSON.stringify(p))); scrollTo(0, 300); };
+      function remove(p) { if (confirm('Delete "' + p.title + '"?')) { db.products = db.products.filter(x => x.id !== p.id); db.cart = db.cart.filter(i => i !== p.id); } }
+      function feature(p) {
+        pay({ email: me.value.email, amount: 500, onSuccess: r => {
+          p.featured = true;
+          db.tx.push({ id: Date.now(), sellerId: db.me, type: 'fee', amount: 500, note: 'Featured: ' + p.title, ref: r.reference, date: new Date().toLocaleString() });
+        } });
+      }
+
+      return { db, view, product, imgIdx, layout, reshuffle, q, cat, max, sort, cats, featured, shown, sellerName,
+        buyerEmail, cartItems, total, addToCart, checkout, reg, register, me, myProducts, myTx, balance, f, blank,
+        onFiles, saveProduct, edit, remove, feature, money, finalPrice };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>

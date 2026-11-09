@@ -1,0 +1,50 @@
+<?php 
+$message='';
+
+if($_GET['success']){
+    $message=match(trim($_GET['service'])){
+        "edit"=>"Product edited successfully!",
+        "create"=>"Product created successfully!",
+        "delete"=>"Product deleted successfully!",
+        default=>"Something went wrong!"
+    };
+}else{
+    $message='Sorry, your request was not successfull!';
+}
+
+function display($output){return htmlspecialchars($output,ENT_QUOTES,'UTF-8');}
+?>
+
+
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>simple_e-commerce</title>
+    <meta name="theme-color" content="orange">
+    <link rel="icon" type="image/jpeg" sizes="148x148" href="assets/img/ippo3.jpg">
+    <link rel="icon" type="image/jpeg" sizes="148x148" href="assets/img/ippo2.jpg">
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+    <link rel="stylesheet" href="assets/css/Navbar-Right-Links-icons.css">
+    <link rel="stylesheet" href="assets/css/Projects-Grid-images.css">
+</head>
+
+<body>
+    <?php include_once "./tools/navbar.php" ?>
+    <section class="py-4 py-xl-5">
+        <div class="container">
+            <div class="text-center p-4 p-lg-5">
+                <p class="fw-bold text-<?= $_GET['success']?'success':'danger' ?> mb-2"><?= $_GET['success']?'Successful':'Unsuccessful' ?></p>
+                <h1 class="fw-bold mb-4"><?= display($message??'') ?></h1>
+                <a href="./index.php" class="btn btn-<?= $_GET['success']?'success':'danger' ?> fs-5 me-2 py-2 px-4">Back to shelf</a>
+                <a href="./product_create.php" class="btn btn-light fs-5 py-2 px-4">create product</a>
+            </div>
+        </div>
+    </section>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+</html>

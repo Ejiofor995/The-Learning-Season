@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html data-theme="luxury">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mercado</title>
+  
+    <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" defer></script>
+  <link rel="stylesheet" href="./libraries/daisyui.css">
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap"
+  rel="stylesheet"
+>
+
+<style>
+  [x-cloak]{display:none}
+</style>
+</head>
+
+<body>
+  
+  <div x-data="{
+products:[],
+selectedProduct:null,
+alert:null,
+loading:true,
+loadProducts(url){
+fetch(url)
+.then(response=>response.json())
+.then(data=>{
+this.products=data.products; 
+this.loading=false;})
+.catch(error=>console.log(error));
+}, getProduct(){
+return this.products.find(param=>param.id == this.selectedProduct);},
+}" x-init="loadProducts('https://dummyjson.com/products?limit=100');">
+    
+  <div x-show="alert" x-transition x-cloak class="fixed inset-0 z-50 justify-center items-center h-64 w-[80%] p-2 md:p-4 md:w-64 mx-auto my-auto">
+    <div class="alert bg-gray-600 text-white">
+      <span x-text="alert"></span>
+      <button  class="btn hover:opacity-50 w-full btn-primary btn-primary-content z-51" @click="alert=null">Ok</button>
+    </div>
+  </div>
+  
+<div
+  x-show="loading"
+  x-transition.opacity
+  x-cloak
+  class="fixed inset-0 z-[100] flex items-center justify-center bg-base-100/90"
+>
+  <div class="text-center">
+
+    <div class="flex justify-center gap-2 mb-3">
+      <span class="w-3 h-3 rounded-full bg-primary animate-bounce"></span>
+      <span class="w-3 h-3 rounded-full bg-primary animate-bounce [animation-delay:150ms]"></span>
+      <span class="w-3 h-3 rounded-full bg-primary animate-bounce [animation-delay:300ms]"></span>
+    </div>
+
+    <p class="text-sm font-semibold opacity-60">
+      Stocking my Mercado...
+    </p>
+
+  </div>
+</div>
+  
+  <div class="card bg-base-200 text-center rounded-none sticky top-0 z-50 py-4">
+    <h2 class="text-xl font-bold">Welcome to my Mercado</h2>
+<p class="text-md">All products rendered from an dummyjson API <span class="text-sm text-blue-500">https://dummyjson.com/products?limit=100</span></p>
+<span class="text-xl" style="font-family:Great Vibes">
+  Dark Zuckerberg
+</span>
+  </div>
+  <div x-show="!selectedProduct" x-transition x-cloak  class="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-4 p-4">
+   
+      
+    <template x-for="product in products" :key="product.id">
+      <div class="card bg-base-200 rounded-none p-none">
+        <figure>
+          <img :src="product.thumbnail" :alt="product.title" class="w-full h-48 object-fit" />
+        </figure>
+        <div class="card-body flex-col">
+          <span class="font-semibold text-lg line-clamp-2" x-text="[product.title]"></span>
+          <span class="font-bold text-md text-green-500"x-text="['£ ' + product.price]"></span>
+          <div class="card-actions mt-auto">
+            <button  class="btn hover:opacity-50 btn-primary btn-primary-content w-full" @click="selectedProduct=product.id; window.scrollTo(0,0)">
+              Buy
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+  
+  </div>
+  
+  <div x-show="selectedProduct" x-transition x-cloak class="w-full">
+    <div class="w-full">
+      <figure>
+        <img :src="getProduct().thumbnail" :alt="geProduct().title"  class="w-full h-64"/>
+      </figure>
+      <div class="flex justify-between items-center px-4 pb-4 border-b-2 border-base-200 text-lg font-bold font-sans">
+              <span x-text="getProduct().title"></span>
+              
+      <span class="text-green-500" x-text="'£ ' + getProduct().price"></span>
+      </div>
+      
+      <div class="card-body">
+        <p x-text="getProduct(). description"></p>
+        
+        
+        <ul class="list-disc list-inside">
+          <li x-text="getProduct().shippingInformation"></li>
+          
+          <li x-text="'Quantity in stock: ' + getProduct().stock"></li>
+          
+          <li x-text="'Weight: ' + getProduct().weight"></li>
+          
+          <li x-text="'Category: ' + getProduct().category"></li>
+        </ul>
+       
+       <br><br>
+       
+       <template x-for="url in getProduct().images">
+                <div class="w-full md:w-full mt-4 border-t-2 border-base-200">
+         <figure>
+           <img :src="url" :alt="geProduct().title" class="w-full h-64 md:h-80" />
+         </figure>
+       </div>
+       </template>
+
+      <div class="flex justify-between itwms-center gap-4">
+              <button  class="btn hover:opacity-50 btn-base-200 btn-secondary-content flex-1" @click="alert='Not yet implemented, i\'ll work on it tomorrow, ok?'">
+                Add to Cart
+              </button>
+      <button  class="btn hover:opacity-50 btn-primary btn-primary-content flex-1" @click="selectedProduct=null; window.scrollTo(0,0)">
+        Keep Shopping
+      </button>
+      </div>
+      </div>
+      
+
+    </div>
+  </div>
+  
+  </div>
+  
+  <script>
+    
+  </script>
+</body>
+
+</html>

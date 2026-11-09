@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="business">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dark Zuckerberg</title>
+    <link rel="stylesheet" href="./libraries/daisyui.css">
+  <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" type="text/javascript" charset="utf-8"></script>
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+  <style>
+    [x-cloak] {display:none}
+  </style>
+</head>
+
+<body class="bg-gray-900 text-white" x-data="{bio:1, u_can:0, u_cant:0}">
+  
+  <div class="card p-4" x-show="bio" x-transition x-cloak>
+    <figure>
+      <img class="" src="assets/images/dark-zuckerberg.jpg" alt="Dark Zuckerberg" />
+    </figure>
+    <div class="card-body px-0">
+   <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">Dark Zuckerberg</h2>
+   
+   <div class="flex justify-center items-center gap-4">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg" class="h-8 bg-white rounded-full px-2 py-1" alt="PHP" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" class="h-8" alt="Python" />
+</div>
+   </div>
+      
+      <p>My name is Emeka Promise Ejiofor, i am 18 years young as of 25th September 2026 which was the day i picked interest in Mark Zuckerberg's life story and i decided to focus on developing my skills, PHP(Laravel) for website development and Python(FastAPI) for AI powered SAAS Businesses and AI trading Bots, so Mark Zukarberg's audience was social media but my audience are traders and investors and any one who needs to utilize AI in their businesses.
+      </p>
+      
+      <p>I just discovered today 27th September 2026 that with PHP(Laravel) i can build websites, APIs and Mobile Apps using NativePHP, even Desktop apps from one language PHP, so PHP is my software development stack then. Since i'm Obsessed with Trading and AI Automation, i will also be learning Python for AI powered Algo Trading Bots, linking to telegram, placing trades and automation in general. Thank God i can to learn PHP 🙏</p>
+      
+      <p>My goal right now is simple, it's to become a changed person and master my skill set (Software development with PHP and Algorithmic Trading with Python) before the age of 19</p>
+    </div>
+    
+    <div class="card-action flex gap-4">
+      
+      <button class="btn bg-red-500 btn-success-content hover:bg-red-300 ease-in-out transition duration-500 flex-1" @click="bio=0, u_cant=1, u_can=0">
+        You can't do it!
+      </button>
+      
+      <button class="btn bg-green-500 hover:bg-green-300 ease-in-out transition duration-500 flex-1" @click="bio=0, u_cant=0, u_can=1">
+  You can do it!
+</button>
+    </div>
+  </div>
+  
+  
+   <div class="card min-h-screen p-4" x-show="u_can" x-transition x-cloak>
+   <figure>
+     <img src="./assets/images/dark-zuckerberg.jpg" alt="Dark Zuckerberg" />
+   </figure>
+   <div class="card-body">
+     <p>Thank you very much, i know i can! i'll see you at the top</p>
+     <div class="card-action">
+       <button class="btn bg-green-500 hover:bg-green-300 btn-xl transition duration-300 ease-in-out w-full" @click="bio=1, u_can=0, u_cant=0">Ride on</button>
+     </div>
+   </div>
+ </div>
+ 
+ 
+  <div class="card min-h-screen p-4" x-show="u_cant" x-transition x-cloak>
+   <figure>
+     <img src="./assets/images/dark-zuckerberg.jpg" alt="Dark Zuckerberg" />
+   </figure>
+   <div class="card-body">
+     <p>Fuck you! what do you know, i will do it and you will see it, like it or not cuz i don't give a dam what you say or think, I WILL SUCCEED SO DEAL WITH IT!!</p>
+     <div class="card-action">
+       <button class="btn bg-green-500 hover:bg-green-300 btn-xl transition duration-300 ease-in-out w-full" @click="bio=1, u_can=0, u_cant=0" >Sorry for doubting you!</button>
+     </div>
+   </div>
+ </div>
+ 
+</body>
+</html>

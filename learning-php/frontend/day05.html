@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Color Picker</title>
+  
+    <script src="./libraries/tailwind.js"></script>
+  <script src="./libraries/alpine.js" defer></script>
+  <link rel="stylesheet" href="./libraries/daisyui.css">
+  <link rel="stylesheet" href="./libraries/daisyui-themes.css">
+</head>
+
+<body x-data="{color:'#de8b07'}":class="['flex justify-center items-center min-h-screen text-white']" :style="`background:${color}` ">
+  
+  <div class="card w-[80%] p-4 border border-white gap-4 bg-gray-700">
+    <h2 class="card-title">
+      Pick a color to change the Background
+    </h2>
+    <div class="">
+      <input x-model="color" class="input w-full" type="color">
+      <p x-text="color" :style="`color:${color}`" class="text-center py-4 text-lg font-bold"></p>
+    </div>
+  </div>
+
+</body>
+
+</html>
